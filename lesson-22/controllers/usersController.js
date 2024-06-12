@@ -25,17 +25,6 @@ const getUserParams = (body) => {
 };
 
 module.exports = {
-  /**
-   * @TODO: login 액션
-   *
-   * Listing 23.3 (p. 336)
-   * userController.js로의 로그인과 인증 액션 추가
-   */
-
-  /**
-   * @TODO: authenticate 액션
-   */
-
   index: (req, res, next) => {
     User.find() // index 액션에서만 퀴리 실행
       .then((users) => {
@@ -53,10 +42,6 @@ module.exports = {
     res.render("users/index", {
       page: "users",
       title: "All Users",
-      // flashMessages: {
-      //   // Listing 22.6 (p. 331) - 렌더링된 인덱스 뷰에서 플래시 메시지를 추가
-      //   success: "Loaded all users!",
-      // },
     }); // 분리된 액션으로 뷰 렌더링
   },
 
@@ -86,16 +71,18 @@ module.exports = {
    * 메시지들을 연결했기 때문에 메시지들은 결국 응답 객체로 연결된다.
    */
   create: (req, res, next) => {
-    let userParams = getUserParams(req.body); // Listing 22.3 (p. 328)
+    let userParams = getUserParams(req.body);
+
     // 폼 파라미터로 사용자 생성
     User.create(userParams)
       .then((user) => {
-        req.flash(
-          "success",
-          `${user.fullName}'s account created successfully!`
-        ); // Listing 22.3 (p. 328)
         res.locals.redirect = "/users";
         res.locals.user = user;
+        // @TODO: 플래시 메시지 추가 - Listing 22.3 (p. 328)
+        req.flash(
+          "success",
+          `${user.fullName}'s account created!`
+        );
         next();
       })
       .catch((error) => {
@@ -103,24 +90,11 @@ module.exports = {
         res.locals.redirect = "/users/new";
         req.flash(
           "error",
-          `Failed to create user account because: ${error.message}.`
-        ); // Listing 22.3 (p. 328)
+          `Could not create account: ${error.message}`
+        )
         next(error);
       });
   },
-
-  /**
-   * @TODO: validate 액션
-   *
-   * Listing 23.7 (p. 346)
-   * userController.js에서 validate 액션 추가
-   */
-
-  /**
-   * [노트] 폼 데이터를 다시 채우기 위해 다양한 방법을 선택할 수 있다. (연구해보면)
-   * 어떤 패키지가 효과적인지 알게 될 것이다. 자신에게 가장 적합한 방법을 찾으면
-   * 데이터를 다시 처리하도록 애플리케이션의 모든 폼을 변경하라.
-   */
 
   // 분리된 redirectView 액션에서 뷰 렌더링
   redirectView: (req, res, next) => {
@@ -184,17 +158,8 @@ module.exports = {
   // update 액션 추가
   update: (req, res, next) => {
     let userId = req.params.id,
-      userParams = {
-        name: {
-          first: req.body.first,
-          last: req.body.last,
-        },
-        email: req.body.email,
-        username: req.body.username,
-        password: req.body.password,
-        profileImg: req.body.profileImg,
-      }; // 요청으로부터 사용자 파라미터 취득
-
+      // @TODO: getUserParams 사용 - Listing 22.3 (p. 328)
+      userParams = getUserParams(req.body); // 요청으로부터 사용자 파라미터 취득
     User.findByIdAndUpdate(userId, {
       $set: userParams,
     }) //ID로 사용자를 찾아 단일 명령으로 레코드를 수정하기 위한 findByIdAndUpdate의 사용
